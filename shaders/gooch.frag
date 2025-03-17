@@ -144,5 +144,5 @@ void main() {
     fragColor = vec4(finalColor + mtl.emissiveColor, 1.0);
 
     // Filter out bright pixels for bloom
-    bloomColor = vec4(albedo / 4.0, 1.0);
+    bloomColor = vec4(albedo / 20 / brightness, 1.0);
 }
