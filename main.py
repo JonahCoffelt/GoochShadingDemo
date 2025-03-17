@@ -8,8 +8,8 @@ goochShader  = bsk.Shader(engine, frag='shaders/gooch.frag')
 scene.shader = goochShader
 
 # Edge detection tools
-# edge_detect = bsk.PostProcess(engine, 'shaders/edge.frag')
-# edge_fbo = bsk.Framebuffer(engine)
+edge_detect = bsk.PostProcess(engine, 'shaders/edge.frag')
+edge_fbo = bsk.Framebuffer(engine)
 
 # Set the lights (just looks better with this shader)
 scene.light_handler.directional_lights = scene.light_handler.directional_lights[:-1]
@@ -37,6 +37,6 @@ scene.add(sphere1, sphere2, sphere3)
 while engine.running:
     scene.update()
 
-    # edge_detect.apply(scene.frame.depth, edge_fbo)
+    edge_detect.apply([('depthTexture', engine.frame.framebuffer._depth_attachment)], edge_fbo)
 
     engine.update()
