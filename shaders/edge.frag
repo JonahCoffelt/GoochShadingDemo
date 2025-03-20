@@ -4,11 +4,22 @@ layout (location = 0) out vec4 fragColor;
 
 in vec2 uv;
 uniform sampler2D depthTexture;
-uniform vec2 textureSize;
+uniform sampler2D normalTexture;
+uniform vec2 viewportDimensions;
+uniform float near;
+uniform float far;
+
+const float width = 2.0;
+
+float linearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
 
 void main()
 { 
-    vec2 offset = 1.0 / textureSize;  
+    vec2 offset = 1.0 / viewportDimensions * width;  
 
     // List of offsets used for sampling the texture
     vec2 offsets[9] = vec2[](
@@ -29,17 +40,15 @@ void main()
         1, 1, 1
     );
 
-    float total = 0.0;
+    float depth_total = 0.0;
+    vec3 normal_total = vec3(0.0);
     for (int i = 0; i < 9; i++)
     {
-       total += texture(depthTexture, uv + offsets[i]).r * kernel[i];
+       depth_total  += linearizeDepth(texture(depthTexture, clamp(uv + offsets[i], 0.001, 0.999)).r) * kernel[i];
+       normal_total += texture(normalTexture, clamp(uv + offsets[i], 0.001, 0.999)).rgb * kernel[i];
     }
 
-    float threshold = 0.05;
-    if (total > threshold) {
-        fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    }
-    else {
-        fragColor = vec4(0.0, 0.0, 0.0, 0.0);
-    }
+    float t_depth = 3;
+    float t_norm = 0.05;
+    fragColor = vec4(int(depth_total > t_depth || normal_total.r > t_norm || normal_total.g > t_norm || normal_total.b > t_norm));
 }
